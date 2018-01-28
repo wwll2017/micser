@@ -1,0 +1,169 @@
+version: "3"
+services:
+   cfgsrv:
+       image: ${CMP_REGISRY}/config-server:2.0.1
+       deploy:
+           replicas: 1
+           resources:
+               limits:
+                   cpus: '2'
+                   memory: 1G
+       volumes:
+           - /opt/cmp/configs/cmpcfg:/cmp/configs
+       command: ["java", "-Djava.security.egd=file:/dev/./urandom", "-Xmx1g", "-jar", "app.jar", "--spring.profiles.active=native"]
+       environment:
+           - "SECURITY_USER_NAME=guest"
+           - "SECURITY_USER_PASSWORD=ciphertext(1&8BEBDD4772822C2458B36769ECE86BE6&68F992207996909530D5E5C2545D547B)"
+       # healthcheck:
+           # test:  curl -f http://localhost:8888/info || exit 1 
+           # interval: 3m
+           # timeout: 3s
+           # retries: 3
+           #
+
+   keystone:
+       image: ${CMP_REGISRY}/keystone:10.0.0.0b1-RC6
+       deploy:
+           replicas: 1
+           resources:
+               limits:
+                   cpus: '2'
+                   memory: 1G
+       environment:
+#            - "KEYSTONE_DBPASS=JajIRapUdvy0dkGrssANSg=="
+           - "KEYSTONE_DBPASS=CSmBP_123"
+           - "MYSQL_HOST=10.21.144.191"
+           - "ADMIN_TOKEN=294a4c8a8a475f9b9836"
+           - "TLS_ENABLED=true"
+       volumes:
+           - /opt/cmpshare/storage/ca/keystone:/etc/nginx/ssl
+       ports:
+           - "5000:5000"
+           - "35357:35357"
+       logging:
+           driver: gelf
+           options:
+               gelf-address: "udp://127.0.0.1:12201"
+
+   kafka:
+       image: 10.21.146.247:10010/kafka:1.0.0-RC7
+       deploy:
+           replicas: 1
+           resources:
+               limits:
+                   cpus: '2'
+                   memory: 1G
+       environment:
+           - "KAFKA_HOME=/kafka"
+           - "KAFKA_VERSION=0.10.0.1"
+       volumes:
+           - /opt/cmp/storage/ca/kafka/server:/var/private/kafka/ssl
+           - /opt/cmp/storage/kafka/server.properties:/kafka/config/server.properties
+   ########################### EUREKA ###########################
+   eureka:
+       image: ${CMP_REGISRY}/spring-eureka:2.0.0
+       deploy:
+           replicas: 1
+           resources:
+               limits:
+                   cpus: '4'
+                   memory: 2G
+       hostname: eureka-master
+       environment:
+           - "affinity:container!=*eureka*"
+       volumes:
+           - /opt/cmp/configs/eureka/application.yml:/cmp/application.yml
+       ports:
+           - "8761:8761"
+       entrypoint:
+           - java
+           - -Djava.security.egd=file:/dev/./urandom
+           - -Xmx2g
+           - -jar
+           - /home/cmp/app.jar
+           - --spring.config.location=file:///cmp/application.yml
+           - --eureka.instance.hostname=eureka-master
+       networks:
+           default:
+               aliases:
+                   - eurekas
+                   - eureka-master
+
+   eureka_slave:
+       image: ${CMP_REGISRY}/spring-eureka:2.0.0
+       deploy:
+           replicas: 1
+           resources:
+               limits:
+                   cpus: '4'
+                   memory: 1G
+       hostname: eureka-slave
+       environment:
+           - "affinity:container!=*eureka*"
+       volumes:
+           - /opt/cmp/configs/eureka/application.yml:/cmp/application.yml
+       entrypoint:
+           - java
+           - -Djava.security.egd=file:/dev/./urandom
+           - -Xmx2g
+           - -jar
+           - /home/cmp/app.jar
+           - --spring.config.location=file:///cmp/application.yml
+           - --eureka.instance.hostname=eureka-slave
+       networks:
+           default:
+               aliases:
+                   - eurekas
+                   - eureka-slave
+
+   ########################### ELK ###########################
+   elasticsearch:
+       image: ${CMP_REGISRY}/elasticsearch
+       deploy:
+           replicas: 1
+           resources:
+               limits:
+                   cpus: '4'
+                   memory: 8G
+       ports:
+           - "9200:9200"
+       command: elasticsearch -Des.network.host=0.0.0.0
+       ulimits:
+           nofile:
+               soft: 65536
+               hard: 65536
+       volumes:
+           - /opt/cmp/storage/elasticsearch/data:/usr/share/elasticsearch/data
+
+   logstash:
+       image: ${CMP_REGISRY}/logstash
+       deploy:
+           replicas: 1
+           resources:
+               limits:
+                   cpus: '4'
+                   memory: 1G
+       command: logstash -f /etc/logstash/conf.d/logstash.conf
+       environment:
+           - "affinity:container!=*logstash*"
+       volumes:
+           - /opt/cmp/configs/logstash/config:/etc/logstash/conf.d
+       ports:
+           - "12201:12201/udp"
+
+   kibana:
+       image: ${CMP_REGISRY}/kibana
+       deploy:
+           replicas: 1
+           resources:
+               limits:
+                   cpus: '2'
+                   memory: 1G
+       volumes:
+           - /opt/cmp/configs/kibana/config/:/opt/kibana/config/
+       ports:
+           - "5601:5601"
+################################## NETWORK ##################################
+networks:
+   default:
+       driver: overlay

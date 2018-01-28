@@ -1,0 +1,22 @@
+
+用于构建docker镜像，基础镜像，
+
+FROM docker.io/java:7u121-jdk-alpine
+
+MAINTAINER <name:lw>
+
+# mkdir to storage application
+RUN mkdir -p "/usr/local/tomcat"
+WORKDIR /usr/local/tomcat
+
+# add dir to container
+ADD /apache-tomcat-8.5.23 /usr/local/tomcat
+
+# Autotest
+RUN echo "testok"
+
+# expose port to use
+EXPOSE 8080
+
+# exec command while startup
+CMD ["./bin/catalina.sh", "run"]

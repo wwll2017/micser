@@ -1,0 +1,11 @@
+eureka:
+  client:
+    serviceUrl:
+#      defaultZone: http://39.108.185.51:8761/eureka/
+      defaultZone: http://${SPRING_CLOUD_EUREKA}:8761/eureka/
+server:
+  port: 8081
+spring:
+  application:
+    name: bootc
+#      defaultZone: http://${SPRING_CLOUD_EUREKA}:8761/eureka/

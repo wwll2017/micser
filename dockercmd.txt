@@ -1,0 +1,52 @@
+---运行docker容器中的tomcat
+docker run -d -v /webapps:/usr/local/tomcat/webapps  -p8080:8080 tomcat
+
+1、docker --help
+帮助
+
+2、docker ps
+查看容器
+
+3、docker run
+运行容器
+/bin/bash 或者 sh 进入容器
+-v /宿主机:/容器
+-p端口：端口
+--rm 关闭后删除容器
+
+4、docker pull
+拉取镜像
+
+5、docker push
+推送镜像
+
+6、docker swarm
+docker集群
+
+7、docker stack
+docker堆栈
+
+8、docker service
+docker服务
+
+9、docker build
+构建镜像
+
+10、docker save
+保存镜像
+
+11、docker commit
+将修改后的容器保存为镜像
+
+12、
+yum list installed | grep docker
+
+13、docker stats
+查看容器的资源使用
+
+images---》containers---》services---》stack---》swarm
+镜像生生容器，容器是服务的实体，服务的编排组成栈，栈在swarm构成集群
+
+
+
+
