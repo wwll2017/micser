@@ -15,7 +15,7 @@ public class RestControler
     public @ResponseBody ResVo sayHi(int id, String str)
     {
         //http://127.0.0.1:8080/rest?id=10&&str=names
-        System.out.println("sayHi," + id + "," + str);
+        System.out.println("boot provider sayHi," + id + "," + str);
 
         ResVo res = new ResVo();
 

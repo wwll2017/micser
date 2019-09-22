@@ -1,7 +1,7 @@
 eureka:
   client:
     serviceUrl:
-      defaultZone: http://39.108.185.51:8761/eureka/
+      defaultZone: http://127.0.0.1:8761/eureka/
 #      defaultZone: http://${SPRING_CLOUD_EUREKA}:8761/eureka/
 server:
   port: 8080
@@ -9,3 +9,8 @@ spring:
   application:
     name: bootp
 #      defaultZone: http://${SPRING_CLOUD_EUREKA}:8761/eureka/
+  zipkin:
+    base-url: http://127.0.0.1:8099
+  sleuth:
+    sampler:
+      percentage: 1.0    
